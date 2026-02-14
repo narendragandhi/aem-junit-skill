@@ -120,21 +120,71 @@ aem-junit-skill/
 </properties>
 ```
 
-## Platform Integration
+## Installation by Platform
 
-### Claude / OpenCode
-Uses native `SKILL.md` format.
+### Claude Code
 
-### Cursor
-Add to `.cursorrules`:
+**Option 1: Project-level (recommended)**
+```bash
+# In your AEM project root
+mkdir -p .claude/skills
+curl -o .claude/skills/aem-junit.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/skills/aem-junit/SKILL.md
 ```
-Read skills/aem-junit/SKILL.md for AEM JUnit testing guidance.
+
+**Option 2: Using npx**
+```bash
+npx aem-junit-skill guide > .claude/skills/aem-junit.md
+```
+
+**Option 3: Global installation**
+```bash
+mkdir -p ~/.claude/skills
+curl -o ~/.claude/skills/aem-junit.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/skills/aem-junit/SKILL.md
+```
+
+### Cursor AI
+
+**Option 1: Copy rules file**
+```bash
+curl -o .cursorrules https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/.cursorrules
+```
+
+**Option 2: Create .cursor/rules directory**
+```bash
+mkdir -p .cursor/rules
+curl -o .cursor/rules/aem-junit.mdc https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/.cursorrules
 ```
 
 ### GitHub Copilot
-Add to `.github/copilot-instructions.md`:
+
+```bash
+mkdir -p .github
+curl -o .github/copilot-instructions.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/.github/copilot-instructions.md
 ```
-Follow instructions in AGENTS.md for AEM JUnit testing.
+
+Or append to existing instructions:
+```bash
+curl https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/.github/copilot-instructions.md >> .github/copilot-instructions.md
+```
+
+### Google Gemini CLI
+
+```bash
+curl -o GEMINI.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/AGENTS.md
+```
+
+### Windsurf / Cascade
+
+```bash
+mkdir -p .windsurf/rules
+curl -o .windsurf/rules/aem-junit.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/skills/aem-junit/SKILL.md
+```
+
+### OpenAI Codex / Other Agents
+
+Use the `AGENTS.md` file which provides a condensed version of the skill:
+```bash
+curl -o AGENTS.md https://raw.githubusercontent.com/narendragandhi/aem-junit-skill/main/AGENTS.md
 ```
 
 ## Example Test
@@ -172,9 +222,19 @@ mvn test
 
 Expected output:
 ```
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
+
+### Example Tests Included
+
+| Test Class | Tests | Patterns Covered |
+|------------|-------|------------------|
+| `HeroComponentTest` | 2 | Basic Sling Model |
+| `HelloServiceTest` | 4 | OSGi Service, Mockito |
+| `NavigationModelTest` | 4 | `@Self`, `@ChildResource` |
+| `SiteConfigTest` | 4 | Context-Aware Config |
+| `AssetApprovalProcessTest` | 6 | Workflow, WorkItem mocking |
 
 ## Contributing
 

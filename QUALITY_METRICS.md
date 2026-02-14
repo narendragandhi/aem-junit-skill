@@ -84,9 +84,16 @@ $ npx aem-junit-skill examples       ✅ Works
 ### Example Project Tests
 
 ```
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
+
+**Test Classes:**
+- `HeroComponentTest` (2 tests) - Basic Sling Model
+- `HelloServiceTest` (4 tests) - OSGi Service with Mockito
+- `NavigationModelTest` (4 tests) - @Self, @ChildResource
+- `SiteConfigTest` (4 tests) - Context-Aware Configuration
+- `AssetApprovalProcessTest` (6 tests) - Workflow process
 
 ---
 
