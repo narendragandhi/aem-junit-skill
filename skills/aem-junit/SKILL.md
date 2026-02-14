@@ -43,10 +43,10 @@ Guide for implementing comprehensive JUnit tests in AEM as a Cloud Service using
 
 ```xml
 <properties>
-    <aem.sdk.api>2024.4.16758.20240422T083412Z-240400</aem.sdk.api>
-    <aem-mock.version>5.7.0</aem-mock.version>
-    <junit.version>5.10.2</junit.version>
-    <mockito.version>5.12.0</mockito.version>
+    <aem.sdk.api>2025.11.23482.20251120T200914Z-251200</aem.sdk.api>
+    <aem-mock.version>5.6.4</aem-mock.version>
+    <junit.version>5.11.0</junit.version>
+    <mockito.version>5.14.0</mockito.version>
 </properties>
 
 <dependencies>

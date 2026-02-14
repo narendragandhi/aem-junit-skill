@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const SKILL_PATH = path.join(__dirname, 'skills', 'aem-junit', 'SKILL.md');
-const EXAMPLES_PATH = path.join(__dirname, 'examples');
+const SKILL_PATH = path.join(__dirname, '..', 'skills', 'aem-junit', 'SKILL.md');
+const EXAMPLES_PATH = path.join(__dirname, '..', 'examples');
 
 const command = process.argv[2] || 'help';
 

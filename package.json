@@ -6,6 +6,12 @@
   "bin": {
     "aem-junit-skill": "./bin/run.js"
   },
+  "files": [
+    "bin/",
+    "skills/",
+    "docs/",
+    "examples/"
+  ],
   "engines": {
     "node": ">=14.0.0"
   },
