@@ -440,6 +440,197 @@ class SearchResultsModelTest {
 }
 ```
 
+### Testing Models with Advanced Annotations
+
+#### Model with @ChildResource
+
+```java
+package com.example.core.models;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+
+import java.util.List;
+
+@Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+public class NavigationModel {
+
+    @ChildResource
+    private List<NavigationItem> items;
+
+    public List<NavigationItem> getItems() {
+        return items;
+    }
+}
+
+@Model(adaptables = Resource.class)
+class NavigationItem {
+    @ValueMapValue
+    private String title;
+    
+    @ValueMapValue
+    private String href;
+
+    public String getTitle() { return title; }
+    public String getHref() { return href; }
+}
+```
+
+```java
+// Test for @ChildResource
+@ExtendWith(AemContextExtension.class)
+class NavigationModelTest {
+
+    private final AemContext context = new AemContext();
+
+    @BeforeEach
+    void setUp() {
+        context.addModelsForClasses(NavigationModel.class, NavigationItem.class);
+        
+        Resource nav = context.create().resource("/content/navigation",
+            "sling:resourceType", "mysite/components/navigation");
+        
+        context.create().resource(nav, "items",
+            "item1", Map.of("title", "Home", "href", "/"),
+            "item2", Map.of("title", "About", "href", "/about"));
+    }
+
+    @Test
+    void testNavigationWithChildResources() {
+        Resource resource = context.resourceResolver().getResource("/content/navigation");
+        
+        ModelFactory modelFactory = context.getService(ModelFactory.class);
+        NavigationModel model = modelFactory.createModel(resource, NavigationModel.class);
+        
+        assertNotNull(model);
+        assertNotNull(model.getItems());
+        assertEquals(2, model.getItems().size());
+        assertEquals("Home", model.getItems().get(0).getTitle());
+    }
+}
+```
+
+#### Model with @Self Injection
+
+```java
+@Model(adaptables = {Resource.class, SlingHttpServletRequest.class}, 
+       defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+public class SelfInjectModel {
+
+    @Self
+    private Resource resource;
+
+    @Self
+    private SlingHttpServletRequest request;
+
+    public String getPath() {
+        return resource.getPath();
+    }
+
+    public String getURL() {
+        return request.getRequestURL().toString();
+    }
+}
+```
+
+```java
+// Test for @Self injection
+@Test
+void testSelfInjection() {
+    context.addModelsForClasses(SelfInjectModel.class);
+    context.currentResource("/content/test");
+    
+    SelfInjectModel model = context.request().adaptTo(SelfInjectModel.class);
+    
+    assertNotNull(model);
+    assertEquals("/content/test", model.getPath());
+}
+```
+
+#### Model with @Named and @Optional
+
+```java
+@Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+public class NamedInjectModel {
+
+    @Named("customTitle")
+    @ValueMapValue
+    private String title;
+
+    @ValueMapValue @Optional
+    private String description;
+
+    @ValueMapValue @Optional
+    private String missingField;
+
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public boolean hasDescription() { return description != null; }
+}
+```
+
+```java
+// Test for @Named and @Optional
+@Test
+void testNamedAndOptionalInjection() {
+    context.addModelsForClasses(NamedInjectModel.class);
+    
+    context.create().resource("/content/test",
+        "customTitle", "Custom Title",
+        "description", "Test Description");
+    
+    Resource resource = context.resourceResolver().getResource("/content/test");
+    NamedInjectModel model = resource.adaptTo(NamedInjectModel.class);
+    
+    assertNotNull(model);
+    assertEquals("Custom Title", model.getTitle());
+    assertTrue(model.hasDescription());
+    assertNull(model.getMissingField()); // @Optional prevents failure
+}
+```
+
+#### Model with Default Values
+
+```java
+@Model(adaptables = Resource.class)
+public class DefaultValueModel {
+
+    @ValueMapValue(defaultValue = "default-title")
+    private String title;
+
+    @ValueMapValue(defaultValue = "0")
+    private int count;
+
+    @ValueMapValue(defaultValue = "false")
+    private boolean enabled;
+
+    public String getTitle() { return title; }
+    public int getCount() { return count; }
+    public boolean isEnabled() { return enabled; }
+}
+```
+
+```java
+// Test for default values
+@Test
+void testDefaultValues() {
+    context.addModelsForClasses(DefaultValueModel.class);
+    
+    // Resource without any properties
+    context.create().resource("/content/defaults",
+        "sling:resourceType", "mysite/components/test");
+    
+    Resource resource = context.resourceResolver().getResource("/content/defaults");
+    DefaultValueModel model = resource.adaptTo(DefaultValueModel.class);
+    
+    assertEquals("default-title", model.getTitle());
+    assertEquals(0, model.getCount());
+    assertFalse(model.isEnabled());
+}
+```
+
 ## Testing OSGi Services
 
 ### Basic Service Test
@@ -1485,10 +1676,10 @@ pipelines:
 ```java
 package com.example.core.search;
 
-import com.day.cq.search.QueryBuilder;
+import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
-import com.day.cq.search.Result;
-import com.day.cq.search.ResultPage;
+import com.day.cq.search.QueryBuilder;
+import com.day.cq.search.result.SearchResult;
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 import org.apache.sling.api.resource.Resource;
@@ -1520,12 +1711,13 @@ class QueryBuilderTest {
         QueryBuilder queryBuilder = context.getService(QueryBuilder.class);
         Session session = context.resourceResolver().adaptTo(Session.class);
 
-        Map<String, Object> predicates = new HashMap<>();
+        Map<String, String> predicates = new HashMap<>();
         predicates.put("path", "/content/mysite");
         predicates.put("type", "cq:Page");
 
-        Query query = queryBuilder.createQuery(predicates, session);
-        Result result = query.getResult();
+        PredicateGroup predicateGroup = PredicateGroup.create(predicates);
+        Query query = queryBuilder.createQuery(predicateGroup, session);
+        SearchResult result = query.getResult();
 
         assertNotNull(result);
         assertEquals(2, result.getHits().size());
@@ -1540,18 +1732,21 @@ class QueryBuilderTest {
         QueryBuilder queryBuilder = context.getService(QueryBuilder.class);
         Session session = context.resourceResolver().adaptTo(Session.class);
 
-        Map<String, Object> predicates = new HashMap<>();
+        Map<String, String> predicates = new HashMap<>();
         predicates.put("path", "/content");
         predicates.put("type", "cq:Page");
         predicates.put("fulltext", "Test");
 
-        Query query = queryBuilder.createQuery(predicates, session);
-        Result result = query.getResult();
+        PredicateGroup predicateGroup = PredicateGroup.create(predicates);
+        Query query = queryBuilder.createQuery(predicateGroup, session);
+        SearchResult result = query.getResult();
 
         assertNotNull(result);
     }
 }
 ```
+
+> **Note**: For AEM as a Cloud Service, always use `PredicateGroup` instead of `Map` for QueryBuilder queries.
 
 ## Testing Content Fragments
 
