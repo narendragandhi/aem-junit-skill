@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "date": "2026-02-14",
+  "changelog": [
+    "Initial release",
+    "2,230 lines of documentation",
+    "22 testing scenarios",
+    "9 CLI commands",
+    "4 platform integrations"
+  ]
+}

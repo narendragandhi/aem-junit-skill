@@ -1,0 +1,88 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cli-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Test CLI help
+        run: node bin/run.js help
+        
+      - name: Test CLI deps
+        run: node bin/run.js deps
+        
+      - name: Test CLI template
+        run: node bin/run.js template model
+        
+      - name: Test CLI examples
+        run: node bin/run.js examples
+        
+      - name: Test CLI quickstart
+        run: node bin/run.js quickstart
+
+  maven-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          
+      - name: Build and test example
+        working-directory: examples/aem-test-verified
+        run: mvn clean test
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: examples/aem-test-verified/target/surefire-reports/
+
+  lint-documentation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check SKILL.md exists
+        run: test -f skills/aem-junit/SKILL.md
+        
+      - name: Check line count
+        run: |
+          lines=$(wc -l < skills/aem-junit/SKILL.md)
+          if [ "$lines" -lt 1000 ]; then
+            echo "SKILL.md too short: $lines lines"
+            exit 1
+          fi
+          echo "SKILL.md has $lines lines"
+
+  npm-publish:
+    needs: [cli-test, maven-test, lint-documentation]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Publish to npm
+        run: |
+          echo "Run 'npm publish' when ready"
+          echo "Note: Requires npm token configured in repo secrets"

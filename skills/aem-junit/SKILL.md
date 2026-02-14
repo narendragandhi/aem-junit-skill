@@ -43,10 +43,10 @@ Guide for implementing comprehensive JUnit tests in AEM as a Cloud Service using
 
 ```xml
 <properties>
-    <aem.sdk.api>2025.11.23482.20251120T200914Z-251200</aem.sdk.api>
-    <aem-mock.version>5.6.4</aem-mock.version>
-    <junit.version>5.11.0</junit.version>
-    <mockito.version>5.14.0</mockito.version>
+    <aem.sdk.api>2024.4.16758.20240422T083412Z-240400</aem.sdk.api>
+    <aem-mock.version>5.7.0</aem-mock.version>
+    <junit.version>5.10.2</junit.version>
+    <mockito.version>5.12.0</mockito.version>
 </properties>
 
 <dependencies>
@@ -100,7 +100,7 @@ Guide for implementing comprehensive JUnit tests in AEM as a Cloud Service using
     <dependency>
         <groupId>org.apache.sling</groupId>
         <artifactId>org.apache.sling.models.impl</artifactId>
-        <version>1.6.0</version>
+        <version>1.7.0</version>
         <scope>test</scope>
     </dependency>
 </dependencies>
@@ -112,15 +112,7 @@ Guide for implementing comprehensive JUnit tests in AEM as a Cloud Service using
 <dependency>
     <groupId>com.adobe.cq</groupId>
     <artifactId>aem-cloud-testing-clients</artifactId>
-    <version>1.2.2</version>
-    <scope>test</scope>
-</dependency>
-
-<!-- Sling Testing Rules -->
-<dependency>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.testing.rules</artifactId>
-    <version>2.0.0</version>
+    <version>1.3.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -377,7 +369,6 @@ public class ProductModelImpl implements ProductModel {
 
 // Test class
 @ExtendWith(AemContextExtension.class)
-@ExtendWith(MockitoExtension.class)
 class ProductModelTest {
 
     private final AemContext context = new AemContext();
@@ -412,6 +403,9 @@ class ProductModelTest {
         assertEquals(99.99, product.getPrice());
     }
 }
+```
+
+> **Note on Mockito integration**: The `AemContextExtension` from `io.wcm.testing.mock.aem.junit5` already includes support for Mockito, so you do not need to add `@ExtendWith(MockitoExtension.class)` to your test class. You can directly use the `@Mock` annotation.
 ```
 
 ### Testing Models with Request Attributes
@@ -1250,33 +1244,34 @@ it.tests/
         └── ContentReplicationIT.java
 ```
 
-### Base Integration Test Class
+### Base Integration Test Class (JUnit 5)
 
 ```java
 package com.example.it;
 
 import com.adobe.cq.testing.client.CQClient;
-import com.adobe.cq.testing.junit.rules.CQAuthorPublishClassRule;
-import com.adobe.cq.testing.junit.rules.CQRule;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import com.adobe.cq.testing.junit.rules.CQAuthorClassRule;
+import com.adobe.cq.testing.junit.rules.CQPublishClassRule;
+import org.apache.sling.testing.clients.ClientException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AuthorPublishTestBase {
 
-    @ClassRule
-    public static CQAuthorPublishClassRule cqBaseClassRule =
-        new CQAuthorPublishClassRule();
+    @RegisterExtension
+    public static final CQAuthorClassRule author = new CQAuthorClassRule();
 
-    @Rule
-    public CQRule cqRule = new CQRule(cqBaseClassRule.authorRule,
-                                       cqBaseClassRule.publishRule);
+    @RegisterExtension
+    public static final CQPublishClassRule publish = new CQPublishClassRule();
 
-    protected CQClient getAuthorClient() {
-        return cqBaseClassRule.authorRule.getAdminClient(CQClient.class);
-    }
+    protected static CQClient authorClient;
+    protected static CQClient publishClient;
 
-    protected CQClient getPublishClient() {
-        return cqBaseClassRule.publishRule.getAdminClient(CQClient.class);
+    @BeforeAll
+    static void beforeAll() {
+        authorClient = author.getAdminClient(CQClient.class);
+        publishClient = publish.getAdminClient(CQClient.class);
     }
 }
 ```
@@ -1288,50 +1283,49 @@ package com.example.it;
 
 import com.adobe.cq.testing.client.CQClient;
 import org.apache.sling.testing.clients.ClientException;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PageCreationIT extends AuthorPublishTestBase {
 
-    private static final String TEST_PAGE_PATH = "/content/mysite/test-page";
-    private static final String TEMPLATE_PATH = "/conf/mysite/settings/wcm/templates/page";
+    private String testPagePath;
+
+    @BeforeEach
+    public void setup() throws ClientException {
+        String pageName = "test-page-" + UUID.randomUUID();
+        testPagePath = authorClient.createPage(pageName, "Test Page", "/content/mysite", "/conf/mysite/settings/wcm/templates/page").getSlingPath();
+    }
+
+    @AfterEach
+    public void cleanup() throws ClientException {
+        if (testPagePath != null) {
+            authorClient.deletePageWithRetry(testPagePath, true, false, 2000, 500);
+        }
+    }
 
     @Test
     public void testCreatePage() throws ClientException {
-        CQClient client = getAuthorClient();
-
-        // Create page
-        client.createPage("test-page", "Test Page", "/content/mysite", TEMPLATE_PATH);
-
-        // Verify page exists
-        assertTrue(client.exists(TEST_PAGE_PATH));
-
-        // Cleanup
-        client.deletePath(TEST_PAGE_PATH);
+        assertTrue(authorClient.exists(testPagePath));
     }
 
     @Test
-    public void testPageReplication() throws ClientException, InterruptedException {
-        CQClient authorClient = getAuthorClient();
-        CQClient publishClient = getPublishClient();
-
-        // Create and activate page
-        authorClient.createPage("repl-test", "Replication Test",
-                               "/content/mysite", TEMPLATE_PATH);
-        authorClient.replicate(TEST_PAGE_PATH);
-
-        // Wait for replication
-        Thread.sleep(5000);
+    public void testPageReplication() throws ClientException {
+        authorClient.replicate(testPagePath);
+        publishClient.waitExists(testPagePath, 10000, 500);
 
         // Verify on publish
-        assertTrue(publishClient.exists(TEST_PAGE_PATH));
+        assertTrue(publishClient.exists(testPagePath));
 
         // Cleanup
-        authorClient.deactivate(TEST_PAGE_PATH);
-        authorClient.deletePath(TEST_PAGE_PATH);
+        authorClient.deactivate(testPagePath);
+        publishClient.waitExists(testPagePath, false, 10000, 500);
     }
 }
+```
 ```
 
 ### Asset Upload Integration Test
@@ -1746,7 +1740,7 @@ class QueryBuilderTest {
 }
 ```
 
-> **Note**: For AEM as a Cloud Service, always use `PredicateGroup` instead of `Map` for QueryBuilder queries.
+> **Note**: While the QueryBuilder service can still accept a `Map`, using `PredicateGroup` is the recommended approach for building queries programmatically as it is more type-safe and less error-prone.
 
 ## Testing Content Fragments
 
@@ -1760,88 +1754,35 @@ import com.adobe.cq.dam.cfm.FragmentData;
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 import org.apache.sling.api.resource.Resource;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.Iterator;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(AemContextExtension.class)
 class ContentFragmentModelTest {
 
     private final AemContext context = new AemContext();
 
-    @BeforeEach
-    void setUp() {
-        Resource fragmentModel = context.create().resource(
-            "/conf/myproject/settings/dam/cfm/models/my-model",
-            "sling:resourceType", "dam/cfm/models/model",
-            "jcr:title", "My Model",
-            "name", "main",
-            "title", "{String}",
-            "description", "{String}",
-            "tags", "{Tag[]}"
-        );
-        
-        context.create().resource(
-            fragmentModel, "elements",
-            "title", "text",
-            "description", "text"
-        );
-    }
-
-    @Test
-    void testContentFragmentCreation() {
-        Resource fragments = context.create().resource(
-            "/content/dam/fragments/my-fragment",
-            "sling:resourceType", "dam/cfm/content/fragment",
-            "model", "/conf/myproject/settings/dam/cfm/models/my-model",
-            "fragmentModel", "my-model"
-        );
-
-        context.create().resource(fragments, "jcr:content",
-            "jcr:title", "Test Fragment",
-            "main", "This is the main content",
-            "description", "Fragment description"
-        );
-
-        Resource fragmentResource = context.resourceResolver()
-            .getResource("/content/dam/fragments/my-fragment");
-        
-        assertNotNull(fragmentResource);
-        
-        ContentFragment fragment = fragmentResource.adaptTo(ContentFragment.class);
-        assertNotNull(fragment);
-        
-        assertEquals("Test Fragment", fragment.getTitle());
-        
-        FragmentData mainData = fragment.getElement("main");
-        assertNotNull(mainData);
-        assertEquals("This is the main content", mainData.getValue());
-    }
-
     @Test
     void testContentFragmentWithElements() {
+        // Create a content fragment resource with elements in the jcr:content node
         Resource fragment = context.create().resource(
             "/content/dam/fragments/article",
-            "sling:resourceType", "dam/cfm/content/fragment"
-        );
-        
-        context.create().resource(fragment, "jcr:content",
-            "jcr:title", "Article Fragment",
-            "headline", "Breaking News",
-            "body", "Article body content"
+            "jcr:primaryType", "dam:Asset",
+            "jcr:content", "jcr:primaryType=dam:AssetContent",
+            "jcr:content/metadata", "jcr:primaryType=nt:unstructured",
+            "jcr:content/data/master/headline", "Breaking News",
+            "jcr:content/data/master/body", "Article body content"
         );
 
         ContentFragment cf = fragment.adaptTo(ContentFragment.class);
         assertNotNull(cf);
 
-        assertEquals("Article Fragment", cf.getTitle());
-        
-        FragmentData headline = cf.getElement("headline");
-        assertEquals("Breaking News", headline.getValue());
+        // Assert elements from the content fragment
+        assertEquals("Breaking News", cf.getElement("headline").getValue(String.class));
+        assertEquals("Article body content", cf.getElement("body").getValue(String.class));
     }
 }
 ```
@@ -1855,14 +1796,10 @@ package com.example.core.config;
 
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
-import org.apache.sling.contextaware.aem.config.ConfigurationContext;
-import org.apache.sling.contextaware.aem.configuration.ConfigurationResourceResolver;
-import org.apache.sling.contextaware.aem.configuration.impl.ConfigurationResourceResolverImpl;
+import org.apache.sling.api.resource.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import com.example.core.config.SiteConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1873,62 +1810,31 @@ class SiteConfigTest {
 
     @BeforeEach
     void setUp() {
-        ConfigurationContext configContext = ConfigurationContext.create(context.resourceResolver());
-        ConfigurationResourceResolver configResolver = new ConfigurationResourceResolverImpl(configContext);
-        context.registerService(ConfigurationResourceResolver.class, configResolver);
-
-        context.create().resource("/conf/mysite",
-            "jcr:primaryType", "sling:Folder");
-
-        context.create().resource("/conf/mysite/settings",
-            "jcr:primaryType", "sling:Folder");
-
-        context.create().resource("/conf/mysite/settings/granite",
-            "jcr:primaryType", "sling:Folder");
-
-        context.create().resource("/conf/mysite/settings/granite/confs",
-            "jcr:primaryType", "sling:Folder",
-            "default", "mysite");
-
-        context.create().resource("/conf/mysite/sling:configs/SiteConfig",
+        // Define the context-aware configuration using AEM Mocks
+        context.create().congaConfiguration("/conf/mysite/sling:configs/com.example.core.config.SiteConfig",
             "siteName", "My Site",
             "siteEmail", "info@mysite.com",
             "maintenanceMode", false);
+            
+        // Set the configuration path for a content tree
+        context.contentPolicyMapping("com.example.core.config.SiteConfig", 
+            "sling:configRef", "/conf/mysite");
+            
+        context.create().resource("/content/mysite");
     }
 
     @Test
     void testGetConfiguration() {
-        Resource resource = context.resourceResolver()
-            .getResource("/content/mysite");
+        // Get the resource for which the context-aware configuration is defined
+        Resource resource = context.resourceResolver().getResource("/content/mysite");
         
+        // Adapt the resource to the configuration interface
         SiteConfig config = resource.adaptTo(SiteConfig.class);
         
         assertNotNull(config);
         assertEquals("My Site", config.siteName());
         assertEquals("info@mysite.com", config.siteEmail());
         assertFalse(config.maintenanceMode());
-    }
-
-    @Test
-    void testConfigurationWithDefaults() {
-        Resource resource = context.resourceResolver()
-            .getResource("/content/other-site");
-        
-        SiteConfig config = resource.adaptTo(SiteConfig.class);
-        
-        assertNotNull(config);
-    }
-
-    @Test
-    void testConfigurationFromPath() {
-        context.create().resource("/conf/othersite/sling:configs/SiteConfig",
-            "siteName", "Other Site",
-            "siteEmail", "contact@othersite.com");
-
-        Resource configResource = context.resourceResolver()
-            .getResource("/conf/othersite/sling:configs/SiteConfig");
-        
-        assertNotNull(configResource);
     }
 }
 ```
@@ -1938,23 +1844,22 @@ class SiteConfigTest {
 ```java
 package com.example.core.config;
 
-import org.apache.sling.contextaware.aem.annotations.ConfigurationResource;
-import org.apache.sling.contextaware.aem.annotations.ConfigurationResourceType;
-import org.osgi.service.component.annotations.Component;
+import org.apache.sling.caconfig.annotation.Configuration;
+import org.apache.sling.caconfig.annotation.Property;
 
-@Component(service = SiteConfig.class)
-@ConfigurationResource(resourceType = "mysite/components/siteconfig")
-public interface SiteConfig {
+@Configuration(label = "Site Configuration", description = "Global site settings")
+public @interface SiteConfig {
 
-    @ConfigurationResource(name = "siteName")
+    @Property(label = "Site Name")
     String siteName();
 
-    @ConfigurationResource(name = "siteEmail") 
+    @Property(label = "Site Email")
     String siteEmail();
 
-    @ConfigurationResource(name = "maintenanceMode", defaultValue = "false")
-    boolean maintenanceMode();
+    @Property(label = "Maintenance Mode", description = "Enable to show a maintenance page")
+    boolean maintenanceMode() default false;
 }
+```
 ```
 
 ## Testing Users, Groups, and ACLs
@@ -2066,21 +1971,25 @@ package com.example.core.security;
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 import org.apache.jackrabbit.api.security.JackrabbitSession;
-import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
-import org.apache.jackrabbit.api.security.authorization.AccessControlList;
-import org.apache.jackrabbit.api.security.authorization.AccessControlEntry;
-import org.apache.jackrabbit.api.security.authorization.AccessControlPolicy;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
-import java.util.UUID;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -2088,81 +1997,49 @@ import static org.junit.jupiter.api.Assertions.*;
 class ACLTest {
 
     private final AemContext context = new AemContext();
-    private Session session;
     private UserManager userManager;
+    private PrincipalManager principalManager;
 
     @BeforeEach
     void setUp() throws RepositoryException {
-        session = context.resourceResolver().adaptTo(Session.class);
-        userManager = session.getUserManager();
-        
-        context.create().page("/content/restricted", "mysite/components/page");
-        
-        User testUser = (User) userManager.createUser("acluser", "password");
-        Principal principal = testUser.getPrincipal();
-        
-        JackrabbitSession jackrabbitSession = (JackrabbitSession) session;
-        PrivilegeManager privilegeManager = jackrabbitSession.getPrivilegeManager();
-        
-        String[] privileges = { "jcr:read" };
-        privilegeManager.registerPrivileges(privileges);
+        userManager = context.resourceResolver().adaptTo(UserManager.class);
+        principalManager = context.resourceResolver().adaptTo(PrincipalManager.class);
+
+        // Create a test user
+        userManager.createUser("testuser", "password");
     }
 
     @Test
-    void testSetPermission() throws RepositoryException {
-        Resource resource = context.resourceResolver()
-            .getResource("/content/restricted");
-        
-        JackrabbitSession session = (JackrabbitSession) context.resourceResolver()
-            .adaptTo(Session.class);
-        
-        Authorizable authorizable = userManager.getAuthorizable("acluser");
-        
-        AccessControlList acl = session.getAccessControlManager()
-            .getApplicablePolicies(resource.getPath()).nextAccessControlPolicy();
-        
-        assertNotNull(acl);
-    }
+    void testSetAndCheckPermission() throws RepositoryException, LoginException {
+        // Create a resource to secure
+        context.create().resource("/content/restricted");
+        Session adminSession = context.resourceResolver().adaptTo(Session.class);
+        AccessControlManager accessControlManager = adminSession.getAccessControlManager();
 
-    @Test
-    void testDenyPermission() throws RepositoryException {
-        Resource resource = context.resourceResolver()
-            .getResource("/content/restricted");
-        
-        JackrabbitSession jackrabbitSession = (JackrabbitSession) session;
-        
-        Authorizable user = userManager.getAuthorizable("acluser");
-        Principal principal = user.getPrincipal();
-        
-        AccessControlList acl = (AccessControlList) jackrabbitSession
-            .getAccessControlManager()
-            .getPolicies(resource.getPath())[0];
-        
-        assertNotNull(acl);
-    }
+        // Get ACL for the path
+        AccessControlList acl;
+        AccessControlPolicy[] policies = accessControlManager.getPolicies("/content/restricted");
+        if (policies.length > 0) {
+            acl = (AccessControlList) policies[0];
+        } else {
+            acl = (AccessControlList) accessControlManager.getApplicablePolicies("/content/restricted").nextAccessControlPolicy();
+        }
 
-    @Test
-    void testCheckPermission() throws RepositoryException {
-        context.create().page("/content/allowed", "mysite/components/page");
-        
-        Resource resource = context.resourceResolver().getResource("/content/allowed");
-        assertNotNull(resource);
-        
-        Session testSession = context.resourceResolver().adaptTo(Session.class);
-        boolean hasRead = testSession.hasPermission("/content/allowed", "read");
-        assertTrue(hasRead);
-    }
+        // Add a deny entry for jcr:read
+        Principal principal = principalManager.getPrincipal("testuser");
+        Privilege[] privileges = { accessControlManager.privilegeFromName(Privilege.JCR_READ) };
+        acl.addAccessControlEntry(principal, privileges, false);
 
-    @Test
-    void testInheritPermission() throws RepositoryException {
-        context.create().page("/content/parent", "mysite/components/page");
-        context.create().page("/content/parent/child", "mysite/components/page");
-        
-        Resource child = context.resourceResolver().getResource("/content/parent/child");
-        assertNotNull(child);
-        
-        Session testSession = context.resourceResolver().adaptTo(Session.class);
-        assertTrue(testSession.hasPermission("/content/parent/child", "read"));
+        // Apply the ACL
+        accessControlManager.setPolicy("/content/restricted", acl);
+        adminSession.save();
+
+        // Get a resource resolver for the test user
+        ResourceResolverFactory rrf = context.getService(ResourceResolverFactory.class);
+        try (ResourceResolver userResolver = rrf.getResourceResolver(Collections.singletonMap(ResourceResolverFactory.USER, "testuser"))) {
+            // Check for the resource, it should be null as the user can't read it
+            assertNull(userResolver.getResource("/content/restricted"));
+        }
     }
 }
 ```
@@ -2174,12 +2051,18 @@ package com.example.core.security;
 
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import javax.jcr.RepositoryException;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -2187,31 +2070,41 @@ import static org.junit.jupiter.api.Assertions.*;
 class ImpersonationTest {
 
     private final AemContext context = new AemContext();
+    private UserManager userManager;
+
+    @BeforeEach
+    void setUp() throws RepositoryException {
+        userManager = context.resourceResolver().adaptTo(UserManager.class);
+        userManager.createUser("testuser", "password");
+    }
 
     @Test
-    void testImpersonateAsUser() throws Exception {
-        UserManager userManager = context.resourceResolver()
-            .adaptTo(UserManager.class);
+    void testImpersonateAsUser() throws LoginException {
+        ResourceResolverFactory rrf = context.getService(ResourceResolverFactory.class);
         
-        User testUser = (User) userManager.createUser("impersonateTest", "password");
-        
-        ResourceResolver adminResolver = context.resourceResolver();
-        ResourceResolver impersonatedResolver = adminResolver;
-        
-        assertNotNull(impersonatedResolver);
+        try (ResourceResolver adminResolver = rrf.getResourceResolver(null);
+             ResourceResolver userResolver = rrf.getResourceResolver(Collections.singletonMap(ResourceResolverFactory.USER, "testuser"))) {
+
+            assertEquals("admin", adminResolver.getUserID());
+            assertEquals("testuser", userResolver.getUserID());
+        }
     }
 
     @Test
     void testServiceUserResolver() {
+        // In a real test, you would have a service user mapping configured
+        // For now, we just get the default service resolver from the context
         ResourceResolver serviceResolver = context.getServiceResourceResolver();
-        
+
         assertNotNull(serviceResolver);
         assertTrue(serviceResolver.isLive());
-        
-        Resource resource = serviceResolver.getResource("/content");
-        assertNotNull(resource);
+
+        // The user id of the service resolver depends on the mock setup
+        // and is typically null or a generated name
+        assertNotNull(serviceResolver.getUserID());
     }
 }
+```
 ```
 
 ## Reference Documentation

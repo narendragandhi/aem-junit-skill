@@ -6,8 +6,13 @@
   "bin": {
     "aem-junit-skill": "./bin/run.js"
   },
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "node bin/run.js examples",
+    "test:cli": "node bin/run.js help && node bin/run.js deps && node bin/run.js template model",
+    "postinstall": "echo 'AEM JUnit Skill installed! Run: npx aem-junit-skill help'"
   },
   "keywords": [
     "aem",
@@ -16,13 +21,18 @@
     "junit",
     "testing",
     "mock",
-    "wcm.io"
+    "wcm.io",
+    "sling-models",
+    "aem-cloud-service"
   ],
-  "author": "",
+  "author": "Narendra Gandhi",
   "license": "Apache-2.0",
   "homepage": "https://github.com/narendragandhi/aem-junit-skill#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/narendragandhi/aem-junit-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/narendragandhi/aem-junit-skill/issues"
   }
 }
