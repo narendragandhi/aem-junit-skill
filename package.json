@@ -1,0 +1,28 @@
+{
+  "name": "aem-junit-skill",
+  "version": "1.0.0",
+  "description": "AEM JUnit Testing skill for AI assistants - Comprehensive guide for testing Adobe Experience Manager with JUnit",
+  "main": "index.js",
+  "bin": {
+    "aem-junit-skill": "./bin/run.js"
+  },
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "aem",
+    "adobe",
+    "experience-manager",
+    "junit",
+    "testing",
+    "mock",
+    "wcm.io"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/narendragandhi/aem-junit-skill#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/narendragandhi/aem-junit-skill.git"
+  }
+}

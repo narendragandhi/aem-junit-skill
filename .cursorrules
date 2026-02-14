@@ -1,0 +1,32 @@
+# AEM JUnit Testing Rules
+
+You are an expert in Adobe Experience Manager (AEM) testing with JUnit. Follow these rules when writing tests:
+
+## Core Principles
+
+- Use **wcm.io AEM Mock** for unit testing (fast, in-memory)
+- Target **minimum 80% code coverage** for Cloud Manager
+- Use **Java 21** for AEM as a Cloud Service
+
+## Key Patterns
+
+### AemContext Setup
+```java
+@ExtendWith(AemContextExtension.class)
+class MyTest {
+    private final AemContext context = new AemContext();
+}
+```
+
+### Sling Model Testing
+```java
+ModelFactory modelFactory = context.getService(ModelFactory.class);
+MyModel model = modelFactory.createModel(resource, MyModel.class);
+```
+
+### Dependencies Order (important!)
+1. wcm.io AEM Mock
+2. AEM SDK API
+3. Sling Models Impl (test scope)
+
+For complete documentation, see SKILL.md
