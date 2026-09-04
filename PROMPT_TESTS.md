@@ -1,6 +1,9 @@
 # AEM JUnit Testing Skill - Prompt Tests
 
-This document contains sample prompts to test the skill's effectiveness.
+This document contains sample prompts for evaluating the skill's effectiveness.
+The repository validates the catalog structure with `npm run test:prompts`; the
+quality of generated model output must still be reviewed against the criteria
+below and recorded separately.
 
 ## Test Prompts
 
@@ -97,8 +100,9 @@ For each prompt test, evaluate:
 
 ## Usage
 
-Test each prompt by:
+Evaluate each prompt by:
 1. Reading the skill documentation relevant to the scenario
-2. Using the CLI template: `npx aem-junit-skill template <type>`
-3. Generating the test code
-4. Verifying code quality against metrics
+2. Generating a response with the target AI agent
+3. Compiling or executing the generated test code where practical
+4. Verifying code quality against the criteria above
+5. Recording pass/fail evidence; do not infer a percentage from prompt count alone

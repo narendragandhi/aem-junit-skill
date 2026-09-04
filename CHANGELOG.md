@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-02-24
+
+### Added
+- **Headless Support**: Patterns for testing Sling Model Exporters (Jackson JSON output).
+- **AEM Forms**: Specific mocking patterns for Adaptive Forms submission handlers.
+- **Cloud Service Secrets**: Patterns for mocking environment variables and $[secret:...] variables.
+- **QueryBuilder Utility**: Reusable `QueryBuilderMockHelper` to simplify complex JCR search testing.
+- New example tests in `examples/aem-test-verified` for Search and Headless patterns.
+
 ## [1.0.0] - 2026-02-14
 
 ### Added

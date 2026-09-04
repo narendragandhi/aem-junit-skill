@@ -1,6 +1,6 @@
 {
   "name": "aem-junit-skill",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "AEM JUnit Testing skill for AI assistants - Comprehensive guide for testing Adobe Experience Manager with JUnit",
   "main": "index.js",
   "bin": {
@@ -8,9 +8,11 @@
   },
   "files": [
     "bin/",
+    "scripts/",
     "skills/",
     "docs/",
-    "examples/"
+    "examples/aem-test-verified/pom.xml",
+    "examples/aem-test-verified/src/"
   ],
   "engines": {
     "node": ">=14.0.0"
@@ -18,6 +20,7 @@
   "scripts": {
     "test": "node bin/run.js examples",
     "test:cli": "node bin/run.js help && node bin/run.js deps && node bin/run.js template model",
+    "test:prompts": "node scripts/validate-prompt-tests.js",
     "postinstall": "echo 'AEM JUnit Skill installed! Run: npx aem-junit-skill help'"
   },
   "keywords": [

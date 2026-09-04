@@ -14,9 +14,17 @@ npm-debug.log
 
 # Build artifacts
 target/
+**/target/
 *.class
+**/*.class
 *.jar
+**/*.jar
 *.war
+**/*.war
+*.exec
+**/*.exec
+examples/aem-test-verified/target
+examples/aem-test-verified/target/**
 
 # Maven
 .mvn/

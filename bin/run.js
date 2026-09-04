@@ -5,13 +5,14 @@ const path = require('path');
 
 const SKILL_PATH = path.join(__dirname, '..', 'skills', 'aem-junit', 'SKILL.md');
 const EXAMPLES_PATH = path.join(__dirname, '..', 'examples');
+const VERSION = require('../package.json').version;
 
 const command = process.argv[2] || 'help';
 
 const commands = {
   help: () => {
     console.log(`
-AEM JUnit Testing Skill v1.0.0
+ AEM JUnit Testing Skill v${VERSION}
 
 Usage: npx aem-junit-skill <command>
 
@@ -327,7 +328,11 @@ class MyServletTest {
 
 ## 1. Add Dependencies
 
-Run: npx aem-junit-skill config > pom.xml
+For an existing project, run "npx aem-junit-skill deps" and merge the dependencies
+into your existing pom.xml. Do not redirect over an existing pom.xml.
+
+For a new scratch project only, "npx aem-junit-skill config > pom.xml" creates a
+complete minimal pom.xml.
 
 ## 2. Create Test Class
 

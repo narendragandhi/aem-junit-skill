@@ -1,0 +1,7 @@
+interface:
+  display_name: "AEM JUnit Testing"
+  short_description: "AEM JUnit testing guidance and patterns"
+  default_prompt: "Use $aem-junit-testing to write or review reliable AEM JUnit tests."
+
+policy:
+  allow_implicit_invocation: true

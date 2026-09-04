@@ -8,11 +8,12 @@
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Total Lines of Documentation** | 2,230 | ✅ |
-| **Total Sections** | 22 | ✅ |
-| **Code Examples** | 50+ | ✅ |
+| **Runtime SKILL.md** | 62 | ✅ |
+| **Detailed testing reference** | 2,311 | ✅ |
+| **Total Sections** | 26 | ✅ |
+| **Code Examples** | 60+ | ✅ |
 | **Working Example Project** | Yes | ✅ |
-| **Test Coverage (example)** | 100% | ✅ |
+| **Test Coverage (example)** | 82.9% line / 78.6% branch | ✅ |
 | **Platform Compatibility** | 4/4 | ✅ |
 
 ---
@@ -25,17 +26,20 @@
 |----------|----------|----------|
 | Sling Models (basic) | ✅ Full | ✅ |
 | Sling Models (advanced annotations) | ✅ Full | ✅ |
+| **Headless (Exporters)** | ✅ Full | ✅ |
 | OSGi Services | ✅ Full | ✅ |
 | Pages & Components | ✅ Full | ✅ |
 | DAM Assets | ✅ Full | ✅ |
+| **AEM Forms (Adaptive)** | ✅ Full | ✅ |
 | Servlets | ✅ Full | ✅ |
 | Workflows | ✅ Full | ✅ |
 | Schedulers | ✅ Full | ✅ |
 | Event Handlers | ✅ Full | ✅ |
-| QueryBuilder | ✅ Fixed | ⚠️ |
+| **QueryBuilder (Helper Utility)**| ✅ Full | ✅ |
 | Content Fragments | ✅ Full | ✅ |
 | Context-Aware Configs | ✅ Full | ✅ |
 | Users/Groups/ACLs | ✅ Full | ✅ |
+| **Cloud Service Secrets** | ✅ Full | ✅ |
 
 ### Advanced Sling Model Annotations Covered
 
@@ -49,6 +53,7 @@
 | `defaultValue` | Default value fallback | ✅ |
 | `DefaultInjectionStrategy` | OPTIONAL/REQUIRED | ✅ |
 | `@OSGiService` | Inject OSGi services | ✅ |
+| `@Exporter` | Sling Model Exporter | ✅ |
 
 ---
 
@@ -84,7 +89,7 @@ $ npx aem-junit-skill examples       ✅ Works
 ### Example Project Tests
 
 ```
-Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
@@ -94,6 +99,7 @@ BUILD SUCCESS
 - `NavigationModelTest` (4 tests) - @Self, @ChildResource
 - `SiteConfigTest` (4 tests) - Context-Aware Configuration
 - `AssetApprovalProcessTest` (6 tests) - Workflow process
+- `SearchServiceTest` (1 test) - QueryBuilder Mock Helper
 
 ---
 
@@ -127,14 +133,6 @@ See [PROMPT_TESTS.md](PROMPT_TESTS.md) for 10 test prompts covering:
 
 ---
 
-## Known Limitations
-
-1. **QueryBuilder**: Requires `PredicateGroup` for AEM Cloud Service (documented)
-2. **Some advanced tests**: May need additional mocking depending on specific AEM version
-3. **Integration tests**: Require running AEM instance (not included in unit tests)
-
----
-
 ## Installation & Usage
 
 ### Quick Install
@@ -150,25 +148,19 @@ npm install -g
 aem-junit-skill guide
 ```
 
-### Build & Test Example
-```bash
-cd examples/aem-test-verified
-mvn test
-```
-
 ---
 
-## Quality Score
+## Quality Assessment
 
 | Category | Score |
 |----------|-------|
-| Documentation | 95% |
-| Code Examples | 90% |
-| Platform Support | 100% |
-| CLI Tools | 100% |
-| Working Tests | 100% |
-| **Overall** | **97%** |
+| Documentation structure | Pass |
+| Code examples | Representative examples compile and run |
+| Platform metadata | Pass |
+| CLI tools | Pass |
+| Working tests | 21 passing |
+| Prompt evaluation | Catalog validated; output scoring is manual |
 
 ---
 
-*Last Updated: February 2026*
+*Last Updated: September 2026 (v1.1.0)*

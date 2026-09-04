@@ -20,9 +20,9 @@ This skill provides comprehensive documentation and templates for writing JUnit 
 
 ### Features
 
-- 📚 **2,200+ lines** of documentation
-- 🎯 **22 testing scenarios** covered
-- ⚡ **9 CLI commands** for quick reference
+- 📚 Comprehensive AEM JUnit testing documentation
+- 🎯 **26 testing sections** covered
+- ⚡ **7 CLI commands** for quick reference
 - ✅ **Working example projects** with tests
 - 🔧 **Platform integrations** (Claude, Cursor, Copilot, Codex)
 
@@ -90,14 +90,17 @@ aem-junit-skill help
 
 ```
 aem-junit-skill/
-├── SKILL.md                    # Main documentation (2,230 lines)
+├── skills/
+│   └── aem-junit/
+│       ├── SKILL.md            # Concise runtime instructions
+│       └── references/         # Detailed patterns loaded as needed
 ├── QUALITY_METRICS.md          # Quality metrics & coverage
+├── SKILL_DEVELOPMENT.md        # Skill creation and release playbook
 ├── PROMPT_TESTS.md             # Test prompts for AI evaluation
 ├── bin/
 │   └── run.js                  # CLI tool
-├── skills/
-│   └── aem-junit/
-│       └── SKILL.md           # Primary skill file
+├── scripts/
+│   └── validate-prompt-tests.js # Prompt catalog evaluator
 ├── docs/
 │   └── references/
 │       └── testing-api-reference.md
@@ -108,6 +111,13 @@ aem-junit-skill/
 │       └── ci.yml            # GitHub Actions
 └── package.json
 ```
+
+## How We Create Skills
+
+See [SKILL_DEVELOPMENT.md](SKILL_DEVELOPMENT.md) for the maintainer workflow:
+define the job and triggers, design progressive disclosure, add deterministic
+resources, evaluate realistic prompts, validate the package, and release with
+evidence-backed quality claims.
 
 ## Dependencies
 
