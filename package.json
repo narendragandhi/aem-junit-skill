@@ -1,6 +1,6 @@
 {
   "name": "aem-junit-skill",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "AEM JUnit Testing skill for AI assistants - Comprehensive guide for testing Adobe Experience Manager with JUnit",
   "main": "index.js",
   "bin": {

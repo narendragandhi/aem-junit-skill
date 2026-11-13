@@ -41,6 +41,12 @@ Use this workflow to create reliable AEM tests with wcm.io AEM Mocks, Apache Sli
 - Never put credentials, tokens, or real customer content in fixtures.
 - Do not claim coverage or compatibility without a recorded command and result.
 
+## Environment gotchas (verified by eval, see EVALS.md)
+
+- DS-annotated classes need bnd-generated SCR metadata on the test classpath before `registerInjectActivateService()` works; in real core modules the bundle plugin provides it, in bare test modules add the `bnd-maven-plugin` (`bnd-process` writes `OSGI-INF/*.xml` to `target/classes`).
+- Do not fake `ResourceResolverFactory` with `context.registerService()` — aem-mock silently keeps its own context-managed factory; test through the context resolver or fake a narrower boundary.
+- Avoid `javax.json.Json` APIs in tests when `io.wcm.maven.aem-cloud-dependencies` is imported — Johnzon 2.x on the classpath makes `Json.createObjectBuilder()` throw; build JSON with plain strings or use the JSONP 1.1 mixin.
+
 ## References and examples
 
 - For detailed patterns and API examples, read [references/full-testing-guide.md](references/full-testing-guide.md).

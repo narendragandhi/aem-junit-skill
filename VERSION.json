@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
-  "date": "2026-02-24",
-  "description": "Added support for Headless (Sling Model Exporters), AEM Forms, Environment Variables, and QueryBuilder mocking utilities."
+  "version": "1.2.0",
+  "date": "2026-11-12",
+  "description": "Freshness update (AEM Mock 5.7.4, JUnit 5.14.4, Mockito 5.24.0, cloud-dependencies BOM) plus eval-verified environment gotchas (SCR metadata, ResourceResolverFactory faking, JSONP provider conflict) and the first EVALS.md results."
 }

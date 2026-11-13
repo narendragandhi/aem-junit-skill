@@ -124,10 +124,10 @@ See [PROMPT_TESTS.md](PROMPT_TESTS.md) for 10 test prompts covering:
 
 | Dependency | Version | Status |
 |------------|---------|--------|
-| wcm.io AEM Mock | 5.6.4 | ✅ |
-| AEM SDK API | 2025.11.23482 | ✅ |
-| JUnit 5 | 5.11.0 | ✅ |
-| Mockito | 5.14.0 | ✅ |
+| wcm.io AEM Mock | 5.7.4 | ✅ |
+| AEM SDK API | 2026.10.29251 | ✅ |
+| JUnit 5 | 5.14.4 | ✅ |
+| Mockito | 5.24.0 | ✅ |
 | Sling Models Impl | 1.6.0 | ✅ |
 | javax.inject | 1 | ✅ |
 
@@ -163,4 +163,4 @@ aem-junit-skill guide
 
 ---
 
-*Last Updated: September 2026 (v1.1.0)*
+*Last Updated: November 2026 (v1.2.0)*

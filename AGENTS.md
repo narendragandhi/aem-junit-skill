@@ -4,7 +4,7 @@ This repository contains comprehensive JUnit testing guidance for Adobe Experien
 
 ## Quick Reference
 
-- **Framework**: wcm.io AEM Mock 5.6.4 + JUnit 5.11.0
+- **Framework**: wcm.io AEM Mock 5.7.4 + JUnit 5.14.4
 - **Java**: 21 (required for AEM Cloud Service)
 - **Coverage Target**: 80% minimum for Cloud Manager
 

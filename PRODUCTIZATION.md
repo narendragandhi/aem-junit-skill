@@ -170,7 +170,7 @@ GitHub Actions workflow runs:
 
 ## Version
 
-Current: **1.1.0** (2026-02-24)
+Current: **1.2.0** (2026-11-12)
 
 See `CHANGELOG.md` for version history.
 

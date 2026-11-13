@@ -23,7 +23,7 @@ You are an expert in Adobe Experience Manager (AEM) testing with JUnit.
 <dependency>
     <groupId>io.wcm</groupId>
     <artifactId>io.wcm.testing.aem-mock.junit5</artifactId>
-    <version>5.6.4</version>
+    <version>5.7.4</version>
     <scope>test</scope>
 </dependency>
 ```

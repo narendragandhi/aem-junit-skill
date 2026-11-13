@@ -51,11 +51,27 @@ For full documentation, visit: https://github.com/narendragandhi/aem-junit-skill
 Add these to your pom.xml:
 
 <properties>
-    <aem.sdk.api>2025.11.23482.20251120T200914Z-251200</aem.sdk.api>
-    <aem-mock.version>5.6.4</aem-mock.version>
-    <junit.version>5.11.0</junit.version>
-    <mockito.version>5.14.0</mockito.version>
+    <aem-cloud-dependencies.version>2026.10.29251.20261029T165345Z-261000.0000</aem-cloud-dependencies.version>
+    <aem-mock.version>5.7.4</aem-mock.version>
+    <junit.version>5.14.4</junit.version>
+    <mockito.version>5.24.0</mockito.version>
 </properties>
+
+<dependencyManagement>
+    <dependencies>
+        <!-- wcm.io AEM Cloud dependencies: manages aem-sdk-api plus all Sling-internal
+             dependencies required for AEM Mocks in the exact versions running in AEMaaCS.
+             Check https://repo.maven.apache.org/maven2/io/wcm/maven/io.wcm.maven.aem-cloud-dependencies/
+             for the latest version. -->
+        <dependency>
+            <groupId>io.wcm.maven</groupId>
+            <artifactId>io.wcm.maven.aem-cloud-dependencies</artifactId>
+            <version>\${aem-cloud-dependencies.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
 
 <dependencies>
     <!-- wcm.io AEM Mock (MUST be before AEM SDK API) -->
@@ -66,11 +82,10 @@ Add these to your pom.xml:
         <scope>test</scope>
     </dependency>
 
-    <!-- AEM SDK API -->
+    <!-- AEM SDK API (version managed by io.wcm.maven.aem-cloud-dependencies) -->
     <dependency>
         <groupId>com.adobe.aem</groupId>
         <artifactId>aem-sdk-api</artifactId>
-        <version>\${aem.sdk.api}</version>
         <scope>provided</scope>
     </dependency>
 
@@ -254,11 +269,22 @@ class MyServletTest {
 <project>
     <modelVersion>4.0.0</modelVersion>
     <properties>
-        <aem.sdk.api>2025.11.23482.20251120T200914Z-251200</aem.sdk.api>
-        <aem-mock.version>5.6.4</aem-mock.version>
-        <junit.version>5.11.0</junit.version>
-        <mockito.version>5.14.0</mockito.version>
+        <aem-cloud-dependencies.version>2026.10.29251.20261029T165345Z-261000.0000</aem-cloud-dependencies.version>
+        <aem-mock.version>5.7.4</aem-mock.version>
+        <junit.version>5.14.4</junit.version>
+        <mockito.version>5.24.0</mockito.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.wcm.maven</groupId>
+                <artifactId>io.wcm.maven.aem-cloud-dependencies</artifactId>
+                <version>\${aem-cloud-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <!-- AEM Mocks (MUST come first) -->
         <dependency>
@@ -271,7 +297,6 @@ class MyServletTest {
         <dependency>
             <groupId>com.adobe.aem</groupId>
             <artifactId>aem-sdk-api</artifactId>
-            <version>\${aem.sdk.api}</version>
             <scope>provided</scope>
         </dependency>
         

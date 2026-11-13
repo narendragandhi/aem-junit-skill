@@ -123,12 +123,16 @@ evidence-backed quality claims.
 
 ```xml
 <properties>
-    <aem.sdk.api>2025.11.23482.20251120T200914Z-251200</aem.sdk.api>
-    <aem-mock.version>5.6.4</aem-mock.version>
-    <junit.version>5.11.0</junit.version>
-    <mockito.version>5.14.0</mockito.version>
+    <aem-cloud-dependencies.version>2026.10.29251.20261029T165345Z-261000.0000</aem-cloud-dependencies.version>
+    <aem-mock.version>5.7.4</aem-mock.version>
+    <junit.version>5.14.4</junit.version>
+    <mockito.version>5.24.0</mockito.version>
 </properties>
 ```
+
+Import `io.wcm.maven.aem-cloud-dependencies` (pom, import scope) to manage
+`aem-sdk-api` plus all Sling-internal dependencies for AEM Mocks — see
+`npx aem-junit-skill deps` for the full snippet.
 
 ## Installation by Platform
 

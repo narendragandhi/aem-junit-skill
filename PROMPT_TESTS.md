@@ -106,3 +106,5 @@ Evaluate each prompt by:
 3. Compiling or executing the generated test code where practical
 4. Verifying code quality against the criteria above
 5. Recording pass/fail evidence; do not infer a percentage from prompt count alone
+
+The latest recorded run with results, evidence, and findings is in [EVALS.md](EVALS.md).
